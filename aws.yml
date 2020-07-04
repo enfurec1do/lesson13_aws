@@ -1,0 +1,17 @@
+---
+- name: Create aws nginx instance
+  hosts: localhost
+  tasks:
+  - name: create key pair using key_material obtained using 'file' lookup plugin
+    ec2_key:
+      name: my_keypair
+      key_material: "{{ lookup('file', '/path/to/public_key/id_rsa.pub') }}"
+    register: key_result
+    debug:
+      var: key_result
+  - name: create a new ec2 key pair, returns generated private key
+    ec2_key:
+      name: my_keypair
+    when: not key_result.changed
+
+    
