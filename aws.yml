@@ -8,7 +8,13 @@
     with_items:
       - boto3
       - botocore
-      
+
+  - ec2_instance:
+      state: absent
+      filters:
+        "tag:role": NGINX 
+    ignore_errors: yes
+
   - name: Create a new ec2 key pair, returns generated private key
     ec2_key:
       name: my_keypair
@@ -18,11 +24,10 @@
     copy: content="{{ key_result.key.private_key }}" dest="/root/.ssh/my_keypair.pem" mode=0400
     when: key_result.changed
 
-  - name: example using security group rule descriptions
+  - name: Create security group
     ec2_group:
       name: EC2SG_NGINX
       description: sg with rule descriptions
-      vpc_id: vpc-123456
       region: us-east-2
       state: present
       rules:
@@ -37,6 +42,10 @@
           cidr_ip: 
             - 130.193.0.0/16
             - 84.201.0.0/16
+    register: result_sg
+
+  - debug:
+     var: result_sg
 
   - ec2_instance:
       name: Nginx instance
@@ -44,8 +53,6 @@
       security_group: EC2SG_NGINX
       network:
         assign_public_ip: true
-        interfaces:
-          - id: "eni-12345"
       volumes:
       - device_name: /dev/sdh
         ebs:
@@ -55,7 +62,15 @@
       image_id: ami-013de1b045799b282
       tags:
         role: "NGINX"
+    register: result_instance
+
+  - debug:
+     var: result_instance
 
   - ec2_instance_info:
       filters:
         "tag:role": NGINX 
+    register: result_instance_info
+
+  - debug:
+     var: result_instance_info
