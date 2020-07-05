@@ -14,4 +14,46 @@
       name: my_keypair
     when: not key_result.changed
 
-    
+  - name: example using security group rule descriptions
+    ec2_group:
+      name: EC2SG_NGINX
+      description: sg with rule descriptions
+      vpc_id: vpc-123456
+      region: us-east-2
+      state: present
+      rules:
+        - proto: tcp
+          ports:
+            - 80
+          cidr_ip: 0.0.0.0/0
+          rule_desc: allow all on port 80
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: 
+            - 130.193.0.0/16
+            - 84.201.0.0/16
+
+  - ec2_instance:
+      name: Nginx instance
+      key_name: my_keypair
+      security_group: EC2SG_NGINX
+      network:
+        assign_public_ip: true
+        interfaces:
+          - id: "eni-12345"
+      tags:
+        Env: "eni_on"
+      volumes:
+      - device_name: /dev/sdh
+        ebs:
+          volume_size: 15
+          delete_on_termination: true
+      instance_type: t2.micro
+      image_id: ami-013de1b045799b282
+      tags:
+        role: "NGINX"
+
+  - ec2_instance_info:
+      filters:
+        "tag:role": NGINX 
