@@ -2,6 +2,13 @@
 - name: Create aws nginx instance
   hosts: localhost
   tasks:
+  - name: Ensure boto and boto3 modules are installed
+    pip:
+      name: "{{ item }}"
+    with_items:
+      - boto3
+      - botocore
+      
   - name: Create a new ec2 key pair, returns generated private key
     ec2_key:
       name: my_keypair
