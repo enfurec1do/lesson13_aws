@@ -7,7 +7,7 @@
       name: my_keypair
       key_material: "{{ lookup('file', '/path/to/public_key/id_rsa.pub') }}"
     register: key_result
-    debug:
+  - debug:
       var: key_result
   - name: create a new ec2 key pair, returns generated private key
     ec2_key:
