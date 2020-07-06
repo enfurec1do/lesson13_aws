@@ -20,8 +20,11 @@
       name: my_keypair
     register: key_result
 
-  - name: Save private key 
-    copy: content="{{ key_result.key.private_key }}" dest="/root/.ssh/my_keypair.pem" mode=0400
+  - name: Save key pair 
+    copy: 
+      content: "{{ key_result.key.private_key }}"
+      dest: "/root/.ssh/my_keypair.pem" 
+      mode: 0400
     when: key_result.changed
 
   - name: Create security group
@@ -47,8 +50,7 @@
   - debug:
      var: result_sg
 
-  - ec2_instance:
-      name: Nginx instance
+  - ec2:
       key_name: my_keypair
       security_group: EC2SG_NGINX
       network:
@@ -60,17 +62,50 @@
           delete_on_termination: true
       instance_type: t2.micro
       image_id: ami-013de1b045799b282
-      tags:
+      wait: yes
+      wait_timeout: 500
+      count: 3
+      instance_tags:
         role: "NGINX"
     register: result_instance
 
   - debug:
      var: result_instance
 
-  - ec2_instance_info:
-      filters:
-        "tag:role": NGINX 
-    register: result_instance_info
+#   - ec2_instance_info:
+#       filters:
+#         "tag:role": NGINX 
+#     register: result_instance_info
 
-  - debug:
-     var: result_instance_info
+#   - debug:
+#       var: result_instance_info
+
+  - set_fact:
+      instance_ips: "{{ result_instance | json_query('instances[*].public_ip') }}"
+
+  - name: Add host to group 'ec2_nginx'
+    add_host:
+       name: '{{ item }}'
+       groups: ec2_nginx
+    with_items: '{{instance_ips}}'
+
+- name: deploy nginx
+  hosts: ec2_nginx
+  tasks:
+    - name: Ensure nginx is installed
+      apt:
+        name: nginx
+        state: present
+    - name: Copy hello page
+      copy:
+        src: index.nginx-debian.html
+        dest: /var/www/html/index.nginx-debian.html
+        follow: yes
+      notify:
+        - restart nginx
+
+- handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
