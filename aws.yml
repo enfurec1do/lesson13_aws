@@ -62,6 +62,7 @@
           delete_on_termination: true
       instance_type: t2.micro
       image: ami-013de1b045799b282
+      vpc_subnet_id: subnet-29e63245
       wait: yes
       wait_timeout: 500
       count: 3
@@ -82,12 +83,23 @@
 
   - set_fact:
       instance_ips: "{{ result_instance | json_query('instances[*].public_ip') }}"
+    
+  - debug:
+      var: instance_ips
 
   - name: Add host to group 'ec2_nginx'
     add_host:
-       name: '{{ item }}'
+       name: '{{ item.public_ip }}'
        groups: ec2_nginx
-    with_items: '{{instance_ips}}'
+    loop: '{{result_instance.instances}}'
+
+  - name: Wait for SSH to come up
+    wait_for:
+      host: '{{ item.public_ip }}'
+      port: 22
+      delay: 10
+      timeout: 320
+    loop: "{{ result_instance.instances }}"
 
 - name: deploy nginx
   hosts: ec2_nginx
