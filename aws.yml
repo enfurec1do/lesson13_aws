@@ -118,12 +118,11 @@
     with_items: '{{instance_ips}}'
 
   - name: Wait for SSH to come up
-    wait_for:
-      host: '{{ item }}'
-      port: 22
-      delay: 10
+    delegate_to: "{{ item.public_dns_name }}"
+    wait_for_connection:
+      delay: 20
       timeout: 320
-    with_items: "{{ instance_ips }}"
+    loop: "{{ result_instance.instances }}"
 
 - name: deploy nginx
   hosts: ec2_nginx
