@@ -59,7 +59,7 @@
       name: '{{security_group_name}}'
       description: sg with rule descriptions
       region: '{{region}}'
-      vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+      vpc_id: "{{ result_vpc.vpc.id }}"
       state: present
       rules:
         - proto: tcp
