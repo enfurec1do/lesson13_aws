@@ -53,6 +53,7 @@
   - ec2:
       key_name: my_keypair
       group: EC2SG_NGINX
+      region: us-east-2
       assign_public_ip: true
       volumes:
       - device_name: /dev/sdh
