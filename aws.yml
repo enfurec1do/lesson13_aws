@@ -52,16 +52,15 @@
 
   - ec2:
       key_name: my_keypair
-      security_group: EC2SG_NGINX
-      network:
-        assign_public_ip: true
+      group: EC2SG_NGINX
+      assign_public_ip: true
       volumes:
       - device_name: /dev/sdh
         ebs:
           volume_size: 15
           delete_on_termination: true
       instance_type: t2.micro
-      image_id: ami-013de1b045799b282
+      image: ami-013de1b045799b282
       wait: yes
       wait_timeout: 500
       count: 3
