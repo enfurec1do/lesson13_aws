@@ -93,9 +93,8 @@
         # allow ingress port 80
         - [200, 'tcp', 'allow', "0.0.0.0/0", null, null, 80, 80]
       # egress acl rules
-      egress:
         # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
-        egress:
+      egress:
             - [100, 'all', 'allow', '0.0.0.0/0', null, null, null, null]
     register: result_acl
 
