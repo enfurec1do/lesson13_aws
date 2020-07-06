@@ -32,26 +32,6 @@
       mode: 0400
     when: key_result.changed
 
-  - name: Create security group
-    ec2_group:
-      name: '{{security_group_name}}'
-      description: sg with rule descriptions
-      region: '{{region}}'
-      state: present
-      rules:
-        - proto: tcp
-          ports:
-            - 80
-          cidr_ip: 0.0.0.0/0
-          rule_desc: allow all on port 80
-        - proto: tcp
-          from_port: 22
-          to_port: 22
-          cidr_ip: 
-            - 130.193.0.0/16
-            - 84.201.0.0/16
-    register: result_sg
-
   - debug:
      var: result_sg
 
@@ -73,6 +53,25 @@
      resource_tags:
        Name: "{{ subnet_name }}"
     register: result_subnet
+
+  - name: Create security group
+    ec2_group:
+      name: '{{security_group_name}}'
+      description: sg with rule descriptions
+      region: '{{region}}'
+      vpc_id: "{{ ec2_vpc_net_result.vpc.id }}"
+      state: present
+      rules:
+        - proto: tcp
+          ports:
+            - 80
+          cidr_ip: 0.0.0.0/0
+          rule_desc: allow all on port 80
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: 0.0.0.0/0
+    register: result_sg
 
   - name: create instances
     ec2:
