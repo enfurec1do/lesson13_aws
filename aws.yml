@@ -34,9 +34,6 @@
       mode: 0400
     when: key_result.changed
 
-  - debug:
-     var: result_sg
-
   - name: create VPC
     ec2_vpc_net:
        name: "{{ vpc_name }}"
