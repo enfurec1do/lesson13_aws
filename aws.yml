@@ -15,7 +15,8 @@
       - boto3
       - botocore
 
-  - ec2_instance:
+  - name: Terminate all aws nginx instance(s)
+    ec2_instance:
       state: absent
       filters:
         "tag:role": NGINX 
