@@ -113,17 +113,17 @@
 
   - name: Add host to group 'ec2_nginx'
     add_host:
-       name: '{{ item.public_ip }}'
+       name: '{{ item }}'
        groups: ec2_nginx
-    loop: '{{result_instance.instances}}'
+    with_items: '{{instance_ips}}'
 
   - name: Wait for SSH to come up
     wait_for:
-      host: '{{ item.public_ip }}'
+      host: '{{ item }}'
       port: 22
       delay: 10
       timeout: 320
-    loop: "{{ result_instance.instances }}"
+    with_items: "{{ instance_ips }}"
 
 - name: deploy nginx
   hosts: ec2_nginx
