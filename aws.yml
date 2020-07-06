@@ -1,6 +1,11 @@
 ---
 - name: Create aws nginx instance
   hosts: localhost
+  vars:
+    region: "us-east-2"
+    security_group_name: "SG_NGINX"
+    vpc_name: "VPC_NGINX"
+    subnet_name: "SUBNET_NGINX"
   tasks:
   - name: Ensure boto and boto3 modules are installed
     pip:
@@ -29,9 +34,9 @@
 
   - name: Create security group
     ec2_group:
-      name: EC2SG_NGINX
+      name: '{{security_group_name}}'
       description: sg with rule descriptions
-      region: us-east-2
+      region: '{{region}}'
       state: present
       rules:
         - proto: tcp
@@ -50,10 +55,30 @@
   - debug:
      var: result_sg
 
-  - ec2:
+  - name: create VPC
+    ec2_vpc_net:
+       name: "{{ vpc_name }}"
+       cidr_block: "10.10.0.0/24"
+       region: "{{ region }}"
+       state: present
+    register: result_vpc
+
+  - name: associate subnet to the VPC
+    ec2_vpc_subnet:
+     state: present
+     vpc_id: "{{ result_vpc.vpc.id }}"
+     region: "{{ region }}"
+     cidr: "10.0.1.16/28"
+     map_public: yes
+     resource_tags:
+       Name: "{{ subnet_name }}"
+    register: result_subnet
+
+  - name: create instances
+    ec2:
       key_name: my_keypair
-      group: EC2SG_NGINX
-      region: us-east-2
+      group: '{{security_group_name}}'
+      region: '{{region}}'
       assign_public_ip: true
       volumes:
       - device_name: /dev/sdh
@@ -62,7 +87,7 @@
           delete_on_termination: true
       instance_type: t2.micro
       image: ami-013de1b045799b282
-      vpc_subnet_id: subnet-29e63245
+      vpc_subnet_id: "{{ subnet_result.subnet.id }}"
       wait: yes
       wait_timeout: 500
       count: 3
