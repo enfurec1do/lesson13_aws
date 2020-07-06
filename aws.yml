@@ -6,6 +6,7 @@
     security_group_name: "SG_NGINX"
     vpc_name: "VPC_NGINX"
     subnet_name: "SUBNET_NGINX"
+    acl_name: "ACL_NGINX"
   tasks:
   - name: Ensure boto and boto3 modules are installed
     pip:
@@ -72,6 +73,30 @@
           to_port: 22
           cidr_ip: 0.0.0.0/0
     register: result_sg
+
+  - name: create ec2 VPC Network access control list
+    ec2_vpc_nacl:
+      vpc_id: "{{ result_vpc.vpc.id }}"
+      region: "{{ region }}"
+      state: present
+      name: "{{ acl_name }}"
+      subnets: [ "{{ result_subnet.subnet.id }}" ]
+      tags:
+        Name: "{{ acl_name }}"
+        Description: "{{ acl_name }}"
+      # ingress acl rules
+      ingress:
+        # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
+        # allow ingress port 22
+        - [100, 'tcp', 'allow', "0.0.0.0/0", null, null, 22, 22]
+        # allow ingress port 80
+        - [200, 'tcp', 'allow', "0.0.0.0/0", null, null, 80, 80]
+      # egress acl rules
+      egress:
+        # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
+        egress:
+            - [100, 'all', 'allow', '0.0.0.0/0', null, null, null, null]
+    register: result_acl
 
   - name: create instances
     ec2:
