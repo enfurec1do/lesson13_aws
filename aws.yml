@@ -68,7 +68,7 @@
      state: present
      vpc_id: "{{ result_vpc.vpc.id }}"
      region: "{{ region }}"
-     cidr: "10.0.1.16/28"
+     cidr: "10.10.0.0/26"
      map_public: yes
      resource_tags:
        Name: "{{ subnet_name }}"
