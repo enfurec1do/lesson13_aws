@@ -80,8 +80,8 @@
       region: '{{region}}'
       assign_public_ip: true
       volumes:
-      - device_name: /dev/sdh
-        ebs:
+        - device_name: /dev/sdh
+          volume_type: gp2
           volume_size: 15
           delete_on_termination: true
       instance_type: t2.micro
