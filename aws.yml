@@ -34,31 +34,31 @@
       mode: 0400
     when: key_result.changed
 
-  - name: create VPC
-    ec2_vpc_net:
-       name: "{{ vpc_name }}"
-       cidr_block: "10.10.0.0/16"
-       region: "{{ region }}"
-       state: present
-    register: result_vpc
+  # - name: create VPC
+  #   ec2_vpc_net:
+  #      name: "{{ vpc_name }}"
+  #      cidr_block: "10.10.0.0/16"
+  #      region: "{{ region }}"
+  #      state: present
+  #   register: result_vpc
 
-  - name: associate subnet to the VPC
-    ec2_vpc_subnet:
-     state: present
-     vpc_id: "{{ result_vpc.vpc.id }}"
-     region: "{{ region }}"
-     cidr: "10.10.0.0/18"
-     map_public: yes
-     resource_tags:
-       Name: "{{ subnet_name }}"
-    register: result_subnet
+  # - name: associate subnet to the VPC
+  #   ec2_vpc_subnet:
+  #    state: present
+  #    vpc_id: "{{ result_vpc.vpc.id }}"
+  #    region: "{{ region }}"
+  #    cidr: "10.10.0.0/18"
+  #    map_public: yes
+  #    resource_tags:
+  #      Name: "{{ subnet_name }}"
+  #   register: result_subnet
 
   - name: Create security group
     ec2_group:
       name: '{{security_group_name}}'
-      description: sg with rule descriptions
+      description: sg for nginx
       region: '{{region}}'
-      vpc_id: "{{ result_vpc.vpc.id }}"
+      #vpc_id: "{{ result_vpc.vpc.id }}"
       state: present
       rules:
         - proto: tcp
@@ -67,50 +67,54 @@
           cidr_ip: 0.0.0.0/0
           rule_desc: allow all on port 80
         - proto: tcp
-          from_port: 22
-          to_port: 22
+          ports:
+            - 22
           cidr_ip: 0.0.0.0/0
+          rule_desc: allow all on ssh port
+      rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
     register: result_sg
 
-  - name: create ec2 VPC Network access control list
-    ec2_vpc_nacl:
-      vpc_id: "{{ result_vpc.vpc.id }}"
-      region: "{{ region }}"
-      state: present
-      name: "{{ acl_name }}"
-      subnets: [ "{{ result_subnet.subnet.id }}" ]
-      tags:
-        Name: "{{ acl_name }}"
-        Description: "{{ acl_name }}"
-      # ingress acl rules
-      ingress:
-        # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
-        # allow ingress port 22
-        - [100, 'tcp', 'allow', "0.0.0.0/0", null, null, 22, 22]
-        # allow ingress port 80
-        - [200, 'tcp', 'allow', "0.0.0.0/0", null, null, 80, 80]
-      # egress acl rules
-        # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
-      egress:
-            - [100, 'all', 'allow', '0.0.0.0/0', null, null, null, null]
-    register: result_acl
+  # - name: create ec2 VPC Network access control list
+  #   ec2_vpc_nacl:
+  #     vpc_id: "{{ result_vpc.vpc.id }}"
+  #     region: "{{ region }}"
+  #     state: present
+  #     name: "{{ acl_name }}"
+  #     subnets: [ "{{ result_subnet.subnet.id }}" ]
+  #     tags:
+  #       Name: "{{ acl_name }}"
+  #       Description: "{{ acl_name }}"
+  #     # ingress acl rules
+  #     ingress:
+  #       # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
+  #       # allow ingress port 22
+  #       - [100, 'tcp', 'allow', "0.0.0.0/0", null, null, 22, 22]
+  #       # allow ingress port 80
+  #       - [200, 'tcp', 'allow', "0.0.0.0/0", null, null, 80, 80]
+  #     # egress acl rules
+  #       # rule no, protocol, allow/deny, cidr, icmp_type, icmp_code, port from, port to
+  #     egress:
+  #           - [100, 'all', 'allow', '0.0.0.0/0', null, null, null, null]
+  #   register: result_acl
 
-  - name: create IGW
-    ec2_vpc_igw:
-      vpc_id: "{{ result_vpc.vpc.id }}"
-      region: "{{ region }}"
-      state: "present"
-    register: result_igw
+  # - name: create IGW
+  #   ec2_vpc_igw:
+  #     vpc_id: "{{ result_vpc.vpc.id }}"
+  #     region: "{{ region }}"
+  #     state: "present"
+  #   register: result_igw
 
-  - name: Route IGW
-    ec2_vpc_route_table:
-      vpc_id: "{{ result_vpc.vpc.id }}"
-      region: "{{ region }}"
-      subnets:
-        - "{{ result_subnet.subnet.id }}"
-      routes:
-        - dest: 0.0.0.0/0
-          gateway_id: "{{ result_igw.gateway_id }}"
+  # - name: Route IGW
+  #   ec2_vpc_route_table:
+  #     vpc_id: "{{ result_vpc.vpc.id }}"
+  #     region: "{{ region }}"
+  #     subnets:
+  #       - "{{ result_subnet.subnet.id }}"
+  #     routes:
+  #       - dest: 0.0.0.0/0
+  #         gateway_id: "{{ result_igw.gateway_id }}"
 
   - name: Create instances
     ec2:
@@ -125,7 +129,7 @@
           delete_on_termination: true
       instance_type: t2.micro
       image: ami-013de1b045799b282
-      vpc_subnet_id: "{{ result_subnet.subnet.id }}"
+      # vpc_subnet_id: "{{ result_subnet.subnet.id }}"
       wait: yes
       wait_timeout: 500
       count: 3
