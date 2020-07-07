@@ -110,7 +110,7 @@
         - "{{ result_subnet.subnet.id }}"
       routes:
         - dest: 0.0.0.0/0
-      gateway_id: "{{ result_igw.gateway_id }}"
+          gateway_id: "{{ result_igw.gateway_id }}"
 
   - name: Create instances
     ec2:
