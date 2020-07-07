@@ -95,7 +95,24 @@
             - [100, 'all', 'allow', '0.0.0.0/0', null, null, null, null]
     register: result_acl
 
-  - name: create instances
+  - name: create IGW
+    ec2_vpc_igw:
+      vpc_id: "{{ result_vpc.vpc.id }}"
+      region: "{{ region }}"
+      state: "present"
+    register: result_igw
+
+  - name: Route IGW
+    ec2_vpc_route_table:
+    vpc_id: "{{ result_vpc.vpc.id }}"
+    region: "{{ region }}"
+    subnets:
+      - "{{ result_subnet.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ result_igw.gateway_id }}"
+
+  - name: Create instances
     ec2:
       key_name: my_keypair
       group: '{{security_group_name}}'
