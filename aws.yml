@@ -104,13 +104,13 @@
 
   - name: Route IGW
     ec2_vpc_route_table:
-    vpc_id: "{{ result_vpc.vpc.id }}"
-    region: "{{ region }}"
-    subnets:
-      - "{{ result_subnet.subnet.id }}"
-    routes:
-      - dest: 0.0.0.0/0
-        gateway_id: "{{ result_igw.gateway_id }}"
+      vpc_id: "{{ result_vpc.vpc.id }}"
+      region: "{{ region }}"
+      subnets:
+        - "{{ result_subnet.subnet.id }}"
+      routes:
+        - dest: 0.0.0.0/0
+      gateway_id: "{{ result_igw.gateway_id }}"
 
   - name: Create instances
     ec2:
